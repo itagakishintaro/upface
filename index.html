@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script type="text/javascript" src="./jquery-2.1.3.min.js"></script>
+    <script type="text/javascript">
+    $.ajax({
+        url: "http://upface.mybluemix.net/data",
+    }).done(function(data) {
+        console.log(data);
+    }).fail(function(error) {
+        console.log(error);
+    });
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
