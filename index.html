@@ -27,23 +27,24 @@
         <!-- 温度、湿度、気圧 -->
         <div class="row">
             <div class="col-md-4">
-                <div class="label label-info info-box center-block">温度：<span id="temp">25</span>℃</div>
+                <div class="label label-info info-box center-block">温度：<span id="temp"></span>℃</div>
             </div>
             <div class="col-md-4">
-                <div class="label label-info info-box center-block">湿度：<span id="humidity">60</span>%</div>
+                <div class="label label-info info-box center-block">湿度：<span id="humidity"></span>%</div>
             </div>
             <div class="col-md-4">
-                <div class="label label-info info-box center-block">気圧：<span id="pressure">100</span>
+                <div class="label label-info info-box center-block">気圧：<span id="pressure"></span>
                 </div>
             </div>
         </div>
 
-        <div class="heading"><span class="label label-default">上向き、前向き、下向き</span></div>
-            <div id="face-direction">Loading...</div>
+        <div class="heading"><span class="label label-default">みんなどっち向き？</span>
+        </div>
+        <div id="face-direction" class="chart">Loading...</div>
 
-        <div class="heading"><span class="label label-default">うなずき、寝落ち</span></div>
-            <div id="time-line">Loading...</div>
-
+        <div class="heading"><span class="label label-default">みんな起きてる？</span>
+        </div>
+        <div id="time-line" class="chart">Loading...</div>
     </div>
 
     <!-- vendor -->
