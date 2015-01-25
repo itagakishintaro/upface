@@ -8,7 +8,7 @@ google.load("visualization", "1", {
 
 $(document).ready(function() {
     getData();
-    setInterval(getData, 10000);
+    setInterval(getData, 3000);
 });
 
 function getData() {
@@ -123,18 +123,31 @@ function playSound(sensor_data) {
     var filtered_data = sensor_data.filter(function(element, index) {
         return element.payload.date > last_time;
     });
+    
+    // 寝落ち
     var sleep_data = getSleep(filtered_data);
     var is_sleep = sleep_data.some(function(element, index){
     	return element.sleep > 0;
     });
-console.log(is_sleep);
     if (is_sleep) {
         var audio = new Audio("");
         audio.autoplay = false;
         audio.src = "./sounds/dont_sleep.m4a";
-        // audio.src = ".sounds/ok.wav";
         audio.play();
         $('img').addClass('animated shake');
     }
+
+    // 暑い
+    var is_hot = filtered_data.some(function(element, index){
+    	return element.payload.temp > 28;
+    });
+    if (is_hot) {
+        var audio = new Audio("");
+        audio.autoplay = false;
+        audio.src = "./sounds/hot.m4a";
+        audio.play();
+        $('img').addClass('animated flip');
+    }
+
     last_time = parseInt(new Date() / 1000);
 }
