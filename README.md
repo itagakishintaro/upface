@@ -27,6 +27,10 @@ ip addr show
 
 表示されたMAC?で紙のとおりに接続
 
+センサーの状態確認
+
+https://quickstart.internetofthings.ibmcloud.com/#/device/784b87a5f969/sensor/
+
 ## シミュレーター
 
 https://quickstart.internetofthings.ibmcloud.com/iotsensor/
