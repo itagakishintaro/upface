@@ -1,6 +1,13 @@
 "use strict";
 
 var last_time = 0;
+var hot_last_time = 0;
+var angle = {
+    "none": 0,
+    "front": 1,
+    "down": 2,
+    "up": 3
+};
 
 google.load("visualization", "1", {
     packages: ["corechart"]
@@ -8,17 +15,22 @@ google.load("visualization", "1", {
 
 $(document).ready(function() {
     getData();
-    setInterval(getData, 3000);
+    setInterval(getData, 5000);
 });
 
 function getData() {
     $.ajax({
         url: "http://upface.mybluemix.net/data",
     }).done(function(data) {
+        console.log(data);
         setCircumstanceInfo(data);
         setFaceDirection(data);
         setTimeLine(data);
         playSound(data);
+        last_time = Math.max.apply(null, data.map(function(element) {
+            return element.payload.date;
+        }));
+        console.log(last_time);
     }).fail(function(error) {
         console.log(error);
     });
@@ -66,8 +78,10 @@ function setFaceDirection(sensor_data) {
 
     var chart = new google.visualization.PieChart(document.getElementById('face-direction'));
     var options = {
-          legend: { position: 'top' }
-        };
+        legend: {
+            position: 'top'
+        }
+    };
     chart.draw(data, options);
 }
 
@@ -88,9 +102,13 @@ function setTimeLine(sensor_data) {
 
     var chart = new google.visualization.LineChart(document.getElementById('time-line'));
     var options = {
-          legend: { position: 'in' },
-          chartArea: {width: "80%"}
-        };
+        legend: {
+            position: 'in'
+        },
+        chartArea: {
+            width: "80%"
+        }
+    };
     chart.draw(data, options);
 }
 
@@ -123,31 +141,89 @@ function playSound(sensor_data) {
     var filtered_data = sensor_data.filter(function(element, index) {
         return element.payload.date > last_time;
     });
-    
+
     // 寝落ち
     var sleep_data = getSleep(filtered_data);
-    var is_sleep = sleep_data.some(function(element, index){
-    	return element.sleep > 0;
+    console.log(sleep_data);
+    var is_sleep = sleep_data.some(function(element, index) {
+        return element.sleep > 0;
     });
     if (is_sleep) {
         var audio = new Audio("");
         audio.autoplay = false;
         audio.src = "./sounds/dont_sleep.m4a";
         audio.play();
-        $('img').addClass('animated shake');
+        $('img.right').attr("src", "./img/dont_sleep.jpg");
+        $('img.bear').addClass('animated shake');
+    } else {
+        $('img.right').attr("src", "");
     }
 
     // 暑い
-    var is_hot = filtered_data.some(function(element, index){
-    	return element.payload.temp > 28;
+    var is_hot = filtered_data.some(function(element, index) {
+        return element.payload.temp > 28;
     });
-    if (is_hot) {
+    console.log(hot_last_time);
+    if (is_hot && filtered_data[0].payload.date > hot_last_time + 60) {
         var audio = new Audio("");
         audio.autoplay = false;
         audio.src = "./sounds/hot.m4a";
         audio.play();
+        $('img.left').attr("src", "./img/hot.jpg");
         $('img').addClass('animated flip');
+        hot_last_time = Math.max.apply(null, filtered_data.map(function(element) {
+            return element.payload.date;
+        }));
+    } else {
+        $('img.left').attr("src", "");
     }
 
-    last_time = parseInt(new Date() / 1000);
+    // ずっと同じ方向
+    var continus_angle = angle.none;
+    for (var i = sensor_data.length - 1; i >= 0; i--) {
+        var element = sensor_data[i];
+        console.log(getFaceAnfle(element));
+        if (parseInt(new Date() / 1000) - element.payload.date > 25) {
+            continus_angle = angle.none;
+            break;
+        } else if (continus_angle == angle.none) {
+            continus_angle = getFaceAnfle(element);
+        } else if (continus_angle != getFaceAnfle(element)) {
+            continus_angle = angle.none;
+            break;
+        }
+    };
+    console.log("continus_angle: " + String(continus_angle));
+    switch (continus_angle) {
+        case angle.front:
+            // 前
+            var audio = new Audio("");
+            audio.autoplay = false;
+            audio.src = "./sounds/ok.wav";
+            audio.play();
+            break;
+        case angle.down:
+            // 下
+            var audio = new Audio("");
+            audio.autoplay = false;
+            audio.src = "./sounds/ok.wav";
+            audio.play();
+            break;
+        case angle.up:
+            // 上
+            break;
+        default:
+            // なし
+            break;
+    }
+}
+
+function getFaceAnfle(data) {
+    if (data.payload.accelY <= -0.5) {
+        return angle.up;
+    } else if (data.payload.accelY > -0.5 && data.payload.accelY < 0.5) {
+        return angle.front;
+    } else {
+        return angle.down;
+    }
 }
