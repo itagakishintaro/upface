@@ -26,6 +26,9 @@ function getData() {
 
 function setCircumstanceInfo(data) {
     var last = data.pop();
+    if (last === undefined) {
+        return;
+    }
     $("#temp").text(last.payload.temp);
     $("#humidity").text(last.payload.humidity);
     $("#pressure").text(last.payload.pressure);
@@ -62,7 +65,10 @@ function setFaceDirection(sensor_data) {
     data.setValue(2, 1, face_direction.down);
 
     var chart = new google.visualization.PieChart(document.getElementById('face-direction'));
-    chart.draw(data);
+    var options = {
+          legend: { position: 'top' }
+        };
+    chart.draw(data, options);
 }
 
 function setTimeLine(sensor_data) {
@@ -75,14 +81,17 @@ function setTimeLine(sensor_data) {
     // 行データ
     var sleep_data = getSleep(sensor_data);
     data.addRows(sleep_data.length + 1);
-    sleep_data.forEach(function(element, index){
-    	data.setValue(index, 0, String(element.date));
-    	data.setValue(index, 1, element.sleep);
+    sleep_data.forEach(function(element, index) {
+        data.setValue(index, 0, String(element.date));
+        data.setValue(index, 1, element.sleep);
     });
 
     var chart = new google.visualization.LineChart(document.getElementById('time-line'));
-
-    chart.draw(data);
+    var options = {
+          legend: { position: 'in' },
+          chartArea: {width: "80%"}
+        };
+    chart.draw(data, options);
 }
 
 function getSleep(data) {
@@ -107,20 +116,25 @@ function getSleep(data) {
             preformatted_data[time_index[String(time)]].sleep += 1;
         }
     });
-console.log(preformatted_data);
     return preformatted_data;
 }
 
 function playSound(sensor_data) {
     var filtered_data = sensor_data.filter(function(element, index) {
-        return element.payload.date > last_time && element.payload.temp > 20;
+        return element.payload.date > last_time;
     });
-    console.log(filtered_data);
-    if (filtered_data.length > 0) {
+    var sleep_data = getSleep(filtered_data);
+    var is_sleep = sleep_data.some(function(element, index){
+    	return element.sleep > 0;
+    });
+console.log(is_sleep);
+    if (is_sleep) {
         var audio = new Audio("");
         audio.autoplay = false;
-        audio.src = "./sounds/ok.wav";
+        audio.src = "./sounds/dont_sleep.m4a";
+        // audio.src = ".sounds/ok.wav";
         audio.play();
+        $('img').addClass('animated shake');
     }
     last_time = parseInt(new Date() / 1000);
 }
