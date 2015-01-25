@@ -1,7 +1,8 @@
 "use strict";
 
-var last_time = 0;
+var last_time = 9999999999;
 var hot_last_time = 0;
+var angle_counter = 0;
 var angle = {
     "none": 0,
     "front": 1,
@@ -161,7 +162,7 @@ function playSound(sensor_data) {
 
     // 暑い
     var is_hot = filtered_data.some(function(element, index) {
-        return element.payload.temp > 28;
+        return element.payload.temp > 29;
     });
     console.log(hot_last_time);
     if (is_hot && filtered_data[0].payload.date > hot_last_time + 60) {
@@ -179,38 +180,55 @@ function playSound(sensor_data) {
     }
 
     // ずっと同じ方向
+    $('img.happy').attr("src", "");
+    $('img.happy').attr("height", "0");
+    $('img.bear').attr("src", "./img/bear.jpg");
+
     var continus_angle = angle.none;
-    for (var i = sensor_data.length - 1; i >= 0; i--) {
-        var element = sensor_data[i];
-        console.log(getFaceAnfle(element));
-        if (parseInt(new Date() / 1000) - element.payload.date > 25) {
-            continus_angle = angle.none;
-            break;
-        } else if (continus_angle == angle.none) {
-            continus_angle = getFaceAnfle(element);
-        } else if (continus_angle != getFaceAnfle(element)) {
-            continus_angle = angle.none;
-            break;
-        }
-    };
+    if(filtered_data.length === 0){
+    	return;
+    }
+    var last = getFaceAngle(filtered_data[0]);
+    var is_continued = filtered_data.every(function(element, index){
+    	return getFaceAngle(element) === last;
+    });
+    if(is_continued){
+    	continus_angle = last;
+    	angle_counter = angle_counter + 1;
+    }
+
+    if(angle_counter < 3){
+    	return;
+    }
+
     console.log("continus_angle: " + String(continus_angle));
     switch (continus_angle) {
         case angle.front:
             // 前
             var audio = new Audio("");
             audio.autoplay = false;
-            audio.src = "./sounds/ok.wav";
+            audio.src = "./sounds/happy.m4a";
             audio.play();
+            angle_counter=0;
+            $('img.happy').attr("height", "200px");
+            $('img.happy').attr("src", "./img/happy.jpg");
+        	$('img').addClass('animated zoomIn');
             break;
         case angle.down:
             // 下
             var audio = new Audio("");
             audio.autoplay = false;
-            audio.src = "./sounds/ok.wav";
+            audio.src = "./sounds/upface.m4a";
             audio.play();
+            angle_counter=0;
+            $('img.bear').attr("src", "./img/angry_bear.jpg");
+            $('img.happy').attr("height", "100px");
+            $('img.happy').attr("src", "./img/angry_comment.jpg");
+        	$('img').addClass('animated zoomIn');
             break;
         case angle.up:
             // 上
+           
             break;
         default:
             // なし
@@ -218,7 +236,7 @@ function playSound(sensor_data) {
     }
 }
 
-function getFaceAnfle(data) {
+function getFaceAngle(data) {
     if (data.payload.accelY <= -0.5) {
         return angle.up;
     } else if (data.payload.accelY > -0.5 && data.payload.accelY < 0.5) {
